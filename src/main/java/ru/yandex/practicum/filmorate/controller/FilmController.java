@@ -4,14 +4,12 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/films")
@@ -36,27 +34,17 @@ public class FilmController {
     }
 
     @PutMapping
-    public ResponseEntity<?> updateFilm(@Valid @RequestBody Film film) {
-        try {
-            Film updatedFilm = filmService.updateFilm(film);
-            return ResponseEntity.ok(updatedFilm);
-        } catch (FilmNotFoundException e) {
-            log.warn("Film not found: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            log.error("Error updating film", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public Film updateFilm(@Valid @RequestBody Film film) throws FilmNotFoundException {
+        return filmService.updateFilm(film);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getFilmById(@PathVariable int id) {
-        try {
-            Film film = filmService.getFilmById(id);
-            return ResponseEntity.ok(film);
-        } catch (FilmNotFoundException e) {
-            log.warn("Film not found: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
+    public Film getFilmById(@PathVariable int id) throws FilmNotFoundException {
+        return filmService.getFilmById(id); // No try-catch needed
+    }
+
+    @GetMapping("/popular")
+    public List<Film> getPopularFilms(@RequestParam(defaultValue = "10") int count) {
+        return filmService.getPopularFilms(count);
     }
 }

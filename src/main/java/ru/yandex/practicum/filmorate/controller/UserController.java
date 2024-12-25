@@ -44,7 +44,7 @@ public class UserController {
             userService.getUserById(user.getId());
             // If the user exists, proceed with the update
             return userService.updateUser(user);
-        } catch (UserNotFoundException | FilmNotFoundException e) {
+        } catch (UserNotFoundException e) {
             // Log the exception and re-throw it to be handled by a global exception handler
             log.warn("User not found: {}", e.getMessage());
             throw e;
@@ -62,5 +62,25 @@ public class UserController {
             errors.put(fieldName, errorMessage);
         });
         return errors;
+    }
+
+    @PutMapping("/{id}/friends/{friendId}")
+    public void addFriend(@PathVariable int id, @PathVariable int friendId) {
+        userService.addFriend(id, friendId);
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public void deleteFriend(@PathVariable int id, @PathVariable int friendId) {
+        userService.deleteFriend(id, friendId);
+    }
+
+    @GetMapping("/{id}/friends")
+    public List<User> getFriends(@PathVariable int id) {
+        return userService.getFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public List<User> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
+        return userService.getCommonFriends(id, otherId);
     }
 }
