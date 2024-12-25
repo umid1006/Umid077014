@@ -35,7 +35,9 @@ public class FilmController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Film createFilm(@Valid @RequestBody Film film) {
-        return filmService.createFilm(film);
+        Film createdFilm = filmService.createFilm(film);
+        log.info("About to return film: {}", createdFilm); // Add this line
+        return createdFilm;
     }
 
     @PutMapping
