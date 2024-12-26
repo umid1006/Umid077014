@@ -1,29 +1,61 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.*;
-import lombok.AccessLevel;
 import lombok.Data;
-import lombok.experimental.FieldDefaults;
+import lombok.Getter;
+import lombok.Setter;
 import ru.yandex.practicum.filmorate.validation.FilmDataChecker;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
-@FieldDefaults(level = AccessLevel.PRIVATE) // Add this line
-public class Film {
-    int id;
+public class Film implements Comparable<Film> {
+    private int id;
 
     @NotBlank(message = "Название фильма не может быть пустым")
-    String name;
+    private String name;
 
     @Size(min = 1, max = 200, message = "Максимальная длина описания — 200 символов")
-    String description;
+    private String description;
 
     @NotNull(message = "Дата релиза не может быть null")
-    @PastOrPresent(message = "Дата релиза не может быть в будущем") // Добавьте эту аннотацию
+    @PastOrPresent(message = "Дата релиза не может быть в будущем")
     @FilmDataChecker
-    LocalDate releaseDate;
+    private LocalDate releaseDate;
 
     @Min(value = 1, message = "Продолжительность фильма должна быть положительным числом")
-    int duration;
+    private int duration;
+
+    @JsonIgnore
+    @Getter // Add this line
+    @Setter // Add this line
+    private Set<Integer> likes = new HashSet<>(); // Remove the final keyword
+
+    public Film(String name, String description, LocalDate releaseDate, int duration) {
+        this.name = name;
+        this.description = description;
+        this.releaseDate = releaseDate;
+        this.duration = duration;
+    }
+
+    public void addLike(int userId) {
+        likes.add(userId);
+    }
+
+    public void deleteLike(int userId) {
+        likes.remove(userId);
+    }
+
+    public int getLikesCount() {
+        return likes.size();
+    }
+
+    @Override
+    public int compareTo(Film other) {
+        // Сравниваем фильмы по количеству лайков в порядке убывания
+        return Integer.compare(other.getLikesCount(), this.getLikesCount());
+    }
 }
