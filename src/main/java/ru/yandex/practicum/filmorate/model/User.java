@@ -32,19 +32,4 @@ public class User {
         this.name = name;
         this.birthday = birthday;
     }
-
-    public User() {
-    }
-
-    public void addFriend(int friendId) {
-        friends.add(friendId);
-    }
-
-    public void deleteFriend(int friendId) {
-        friends.remove(friendId);
-    }
-
-    public boolean isFriend(int friendId) {
-        return friends.contains(friendId);
-    }
 }
