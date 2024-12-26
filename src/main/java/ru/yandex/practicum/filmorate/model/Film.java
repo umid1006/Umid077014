@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.Getter;
@@ -28,6 +29,7 @@ public class Film implements Comparable<Film> {
     @Min(value = 1, message = "Продолжительность фильма должна быть положительным числом")
     private int duration;
 
+    @JsonIgnore
     @Getter // Add this line
     @Setter // Add this line
     private Set<Integer> likes = new HashSet<>(); // Remove the final keyword
