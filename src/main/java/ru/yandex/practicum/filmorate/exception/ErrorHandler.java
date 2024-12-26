@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import javax.validation.ValidationException;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
