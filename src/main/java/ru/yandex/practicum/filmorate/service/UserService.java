@@ -1,13 +1,14 @@
 package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -15,9 +16,12 @@ public class UserService {
 
     private final UserStorage userStorage;
 
+    private final FilmStorage filmStorage;
+
     @Autowired
-    public UserService(UserStorage userStorage) {
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage, @Qualifier("filmDbStorage") FilmStorage filmStorage) {
         this.userStorage = userStorage;
+        this.filmStorage = filmStorage;
     }
 
     public List<User> getAllUsers() {
@@ -44,19 +48,15 @@ public class UserService {
     }
 
     public User getUserById(int id) throws UserNotFoundException {
-        User user = userStorage.getUserById(id);
-        if (user == null) {
-            throw new UserNotFoundException("Пользователь с ID " + id + " не найден");
-        }
-        return user;
+        return userStorage.getUserById(id);
     }
 
     public void addFriend(int userId, int friendId) throws UserNotFoundException {
         User user = getUserById(userId);
         User friend = getUserById(friendId);
 
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
+        user.addFriend(friendId);
+        friend.addFriend(userId);
 
         userStorage.updateUser(user);
         userStorage.updateUser(friend);
@@ -66,8 +66,8 @@ public class UserService {
         User user = getUserById(userId);
         User friend = getUserById(friendId);
 
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(userId);
+        user.removeFriend(friendId);
+        friend.removeFriend(userId);
 
         userStorage.updateUser(user);
         userStorage.updateUser(friend);
@@ -84,11 +84,8 @@ public class UserService {
         User user = getUserById(userId);
         User otherUser = getUserById(otherUserId);
 
-        Set<Integer> userFriends = user.getFriends();
-        Set<Integer> otherUserFriends = otherUser.getFriends();
-
-        return userFriends.stream()
-                .filter(otherUserFriends::contains)
+        return user.getFriends().stream()
+                .filter(otherUser.getFriends()::contains)
                 .map(userStorage::getUserById)
                 .collect(Collectors.toList());
     }
