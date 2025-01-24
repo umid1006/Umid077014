@@ -3,10 +3,12 @@ package ru.yandex.practicum.filmorate.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 @Entity
@@ -15,8 +17,9 @@ import java.util.Set;
 @Setter
 @ToString(exclude = "friends")
 @EqualsAndHashCode(of = "id")
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor // Добавил, чтобы работал @Builder
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,13 +41,15 @@ public class User {
     String email;
 
     @NotNull(message = "Дата рождения не может быть null")
-    @Past(message = "Дата рождения не может быть в будущем")
+    @PastOrPresent(message = "Дата рождения не может быть в будущем")
     @Column(name = "birthday", nullable = false)
     LocalDate birthday;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "friendships", joinColumns = @JoinColumn(name = "user1_id"))
-    @Column(name = "user2_id")
+    @MapKeyColumn(name = "user2_id")
+    @Column(name = "created_at")
+    @Builder.Default
     Set<Integer> friends = new HashSet<>();
 
     public User(String email, String login, String name, LocalDate birthday) {

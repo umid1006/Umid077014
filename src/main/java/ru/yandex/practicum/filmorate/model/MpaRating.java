@@ -1,11 +1,15 @@
 package ru.yandex.practicum.filmorate.model;
 
-import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Optional;
+
+@JsonFormat(shape = JsonFormat.Shape.OBJECT)
 @Getter
-@Entity
-@Table(name = "mpa")
 public enum MpaRating {
     G(1, "G", "У фильма нет возрастных ограничений"),
     PG(2, "PG", "Детям рекомендуется смотреть фильм с родителями"),
@@ -13,14 +17,8 @@ public enum MpaRating {
     R(4, "R", "Лицам до 17 лет просматривать фильм можно только в присутствии взрослого"),
     NC17(5, "NC-17", "Лицам до 18 лет просмотр запрещён");
 
-    @Id
-    @Column(name = "rating_id")
     private final int id;
-
-    @Column(name = "rating_name", nullable = false, unique = true)
     private final String name;
-
-    @Column(name = "description")
     private final String description;
 
     MpaRating(int id, String name, String description) {
@@ -29,15 +27,31 @@ public enum MpaRating {
         this.description = description;
     }
 
-    MpaRating() {
-        this.id = 0;
-        this.name = null;
-        this.description = null;
+    @JsonCreator
+    public static MpaRating forValues(Map<String, Object> mpaRating) {
+        if (mpaRating == null) {
+            throw new IllegalArgumentException("Invalid input for MpaRating");
+        }
+        for (MpaRating rating : MpaRating.values()) {
+            if (rating.getId() == (Integer) mpaRating.get("id")) {
+                return rating;
+            }
+        }
+        return null;
     }
 
-    public static MpaRating getRatingById(int id) {
-        for (MpaRating rating : MpaRating.values()) {
-            if (rating.getId() == id) {
+    public static MpaRating valueOfName(String name) {
+        for (MpaRating mpa : values()) {
+            if (mpa.name.equals(name)) {
+                return mpa;
+            }
+        }
+        return null;
+    }
+
+    public static MpaRating fromId(int id) {
+        for (MpaRating rating : values()) {
+            if (rating.id == id) {
                 return rating;
             }
         }

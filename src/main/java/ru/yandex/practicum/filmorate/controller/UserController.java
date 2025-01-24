@@ -5,8 +5,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
@@ -24,18 +26,6 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping
-    public List<User> getAllUsers() {
-        log.info("Getting all users");
-        return userService.getAllUsers();
-    }
-
-    @GetMapping("/{id}")
-    public User getUserById(@PathVariable int id) throws UserNotFoundException {
-        log.info("Getting user with id: {}", id);
-        return userService.getUserById(id);
-    }
-
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public User createUser(@Valid @RequestBody User user) {
@@ -46,7 +36,22 @@ public class UserController {
     @PutMapping
     public User updateUser(@Valid @RequestBody User user) throws UserNotFoundException {
         log.info("Updating user: {}", user);
+        if (user.getId() <= 0) {
+            throw new ValidationException("User ID must be a positive integer");
+        }
         return userService.updateUser(user);
+    }
+
+    @GetMapping
+    public List<User> getAllUsers() {
+        log.info("Getting all users");
+        return userService.getAllUsers();
+    }
+
+    @GetMapping("/{id}")
+    public User getUserById(@PathVariable int id) throws UserNotFoundException {
+        log.info("Getting user with id: {}", id);
+        return userService.getUserById(id);
     }
 
     @DeleteMapping("/{id}")

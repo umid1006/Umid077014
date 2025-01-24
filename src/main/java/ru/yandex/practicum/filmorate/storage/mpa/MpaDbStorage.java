@@ -1,51 +1,42 @@
 package ru.yandex.practicum.filmorate.storage.mpa;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 import ru.yandex.practicum.filmorate.storage.MpaStorage;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
-@Qualifier("mpaDbStorage")
 public class MpaDbStorage implements MpaStorage {
-
     private final JdbcTemplate jdbcTemplate;
 
-    @Autowired
     public MpaDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
-    public MpaRating getMpaRatingById(int ratingId) {
-        String sqlQuery = "SELECT rating_id, rating_name, description FROM mpa WHERE rating_id = ?";
-        List<MpaRating> mpaRatings = jdbcTemplate.query(sqlQuery, new MpaRatingRowMapper(), ratingId);
-        if (mpaRatings.isEmpty()) {
-            return null;
+    public Optional<MpaRating> getMpaRatingById(int id) {
+        SqlRowSet mpaRows = jdbcTemplate.queryForRowSet("SELECT * FROM mpa WHERE rating_id = ?", id);
+        if (mpaRows.next()) {
+            // Используем MpaRating.valueOfName для получения экземпляра enum по имени
+            return Optional.ofNullable(MpaRating.valueOfName(mpaRows.getString("rating_name")));
+        } else {
+            return Optional.empty();
         }
-        return mpaRatings.get(0);
     }
 
     @Override
     public List<MpaRating> getAllMpaRatings() {
-        String sqlQuery = "SELECT rating_id, rating_name, description FROM mpa";
-        return jdbcTemplate.query(sqlQuery, new MpaRatingRowMapper());
-    }
-
-    private static class MpaRatingRowMapper implements RowMapper<MpaRating> {
-        @Override
-        public MpaRating mapRow(ResultSet rs, int rowNum) throws SQLException {
-            int id = rs.getInt("rating_id");
-            String name = rs.getString("rating_name");
-            String description = rs.getString("description");
-            return MpaRating.getRatingById(id);
+        List<MpaRating> mpaRatings = new ArrayList<>();
+        SqlRowSet mpaRows = jdbcTemplate.queryForRowSet("SELECT * FROM mpa");
+        while (mpaRows.next()) {
+            // Используем MpaRating.valueOfName для получения экземпляра enum по имени
+            mpaRatings.add(MpaRating.valueOfName(mpaRows.getString("rating_name")));
         }
+        return mpaRatings;
     }
 }

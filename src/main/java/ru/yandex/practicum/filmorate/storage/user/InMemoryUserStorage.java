@@ -1,21 +1,25 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
+import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
+@Qualifier("inMemoryUserStorage")
 public class InMemoryUserStorage implements UserStorage {
     private final Map<Integer, User> users = new HashMap<>();
     private int nextId = 1;
+    private Logger log; // Logger instance
+
+    public void setLogger(Logger log) {
+        this.log = log;
+    }
 
     @Override
     public User addUser(User user) {
@@ -58,25 +62,39 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public void addFriend(int userId, int friendId) {
         User user = getUserById(userId);
-        User friend = getUserById(friendId);
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
+        user.addFriend(friendId); // Only add to the user's friend list
     }
 
     @Override
     public void deleteFriend(int userId, int friendId) {
         User user = getUserById(userId);
-        User friend = getUserById(friendId);
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(userId);
+        user.removeFriend(friendId);
     }
 
     @Override
     public List<User> getUserFriends(int userId) {
         User user = getUserById(userId);
-        return user.getFriends().stream()
-                .map(this::getUserById)
-                .collect(Collectors.toList());
+        Set<Integer> friendIds = user.getFriends();
+
+        if (friendIds.isEmpty()) {
+            return List.of(new User()); // Return a list with an empty User object
+        }
+
+        List<User> friends = new ArrayList<>();
+        for (Integer id : friendIds) {
+            try {
+                friends.add(getUserById(id));
+            } catch (UserNotFoundException e) {
+                if (log != null) {
+                    log.warn("Friend with ID {} not found while getting friends for user with ID {}", id, userId);
+                } else {
+                    // Fallback to a local logger if UserService logger is not accessible
+                    Logger logger = org.slf4j.LoggerFactory.getLogger(InMemoryUserStorage.class);
+                    logger.warn("Friend with ID {} not found while getting friends for user with ID {}", id, userId);
+                }
+            }
+        }
+        return friends;
     }
 
     @Override
@@ -91,5 +109,10 @@ public class InMemoryUserStorage implements UserStorage {
                 .filter(otherUserFriends::contains)
                 .map(this::getUserById)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<User> findById(int id) {
+        return Optional.ofNullable(users.get(id));
     }
 }

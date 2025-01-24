@@ -4,8 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-import lombok.experimental.FieldDefaults;
-import ru.yandex.practicum.filmorate.validation.FilmDataChecker;
+import ru.yandex.practicum.filmorate.validator.FilmDataChecker;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -15,60 +14,66 @@ import java.util.Set;
 @Table(name = "films")
 @Getter
 @Setter
-@ToString(exclude = "likes")
+@ToString
 @EqualsAndHashCode(of = "id")
-@FieldDefaults(level = AccessLevel.PRIVATE)
-@NoArgsConstructor
+@Builder
+@AllArgsConstructor // Добавил для @Builder
 public class Film implements Comparable<Film> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "film_id")
-    int id;
+    private int id;
 
     @NotBlank(message = "Название фильма не может быть пустым")
     @Column(name = "name", nullable = false)
-    String name;
+    private String name;
 
     @Size(min = 1, max = 200, message = "Максимальная длина описания — 200 символов")
     @Column(name = "description", length = 200)
-    String description;
+    private String description;
 
     @NotNull(message = "Дата релиза не может быть null")
     @PastOrPresent(message = "Дата релиза не может быть в будущем")
     @FilmDataChecker
     @Column(name = "release_date", nullable = false)
-    LocalDate releaseDate;
+    private LocalDate releaseDate;
 
     @Min(value = 1, message = "Продолжительность фильма должна быть положительным числом")
     @Column(name = "duration", nullable = false)
-    int duration;
+    private int duration;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "film_likes", joinColumns = @JoinColumn(name = "film_id"))
-    @Column(name = "user_id")
-    Set<Integer> likes = new HashSet<>();
+    @NotNull(message = "Рейтинг MPA не может быть null")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rating_id")
+    private MpaRating mpaRating;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "film_genres",
             joinColumns = @JoinColumn(name = "film_id"),
             inverseJoinColumns = @JoinColumn(name = "genre_id")
     )
-    Set<Genre> genres = new HashSet<>();
+    @Builder.Default
+    private Set<Genre> genres = new HashSet<>();
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "rating_id", nullable = false)
-    @NotNull(message = "Рейтинг MPA не может быть null")
-    private MpaRating mpaRating;
+    @Transient
+    @JsonIgnore
+    @Builder.Default
+    private Set<Integer> likes = new HashSet<>();
 
+    public Film() {
+        this.genres = new HashSet<>();
+        this.likes = new HashSet<>();
+    }
 
-    public Film(String name, String description, LocalDate releaseDate, int duration, Set<Genre> genres, MpaRating mpaRating) {
-        this.name = name;
-        this.description = description;
-        this.releaseDate = releaseDate;
-        this.duration = duration;
-        this.genres = genres;
-        this.mpaRating = mpaRating;
+    public void addGenre(Genre genre) {
+        genres.add(genre);
+    }
+
+    public void removeGenre(Genre genre) {
+        if (genres != null) {
+            genres.remove(genre);
+        }
     }
 
     public void addLike(int userId) {
