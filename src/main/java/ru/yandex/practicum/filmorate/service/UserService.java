@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,6 +29,11 @@ public class UserService {
         return userStorage.getAllUsers();
     }
 
+    public User getUserById(int id) throws UserNotFoundException {
+        log.info("Getting user with id: {}", id);
+        return userStorage.getUserById(id);
+    }
+
     public User createUser(User user) {
         log.info("Creating user: {}", user);
         if (user.getName() == null || user.getName().isBlank()) {
@@ -42,6 +46,7 @@ public class UserService {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
+        userStorage.getUserById(user.getId()); // Check if user exists before updating
         return userStorage.updateUser(user);
     }
 
@@ -50,31 +55,22 @@ public class UserService {
         userStorage.deleteUser(userId);
     }
 
-    public User getUserById(int id) throws UserNotFoundException {
-        log.info("Getting user with id: {}", id);
-        return userStorage.getUserById(id);
-    }
-
-    @Transactional
     public void addFriend(int userId, int friendId) throws UserNotFoundException {
         log.info("Adding friend with id: {} to user with id: {}", friendId, userId);
         // При использовании `@Qualifier` достаточно вызывать `getUserById`, чтобы инициировать исключение
-        User user = userStorage.getUserById(userId);
-        User friend = userStorage.getUserById(friendId); // Проверка существования друга
-        user.addFriend(friendId);
-        userStorage.updateUser(user);
+        userStorage.getUserById(userId);
+        userStorage.getUserById(friendId);
+        userStorage.addFriend(userId, friendId);
     }
 
-    @Transactional
     public void deleteFriend(int userId, int friendId) throws UserNotFoundException {
         log.info("Deleting friend with id: {} from user with id: {}", friendId, userId);
-        User user = userStorage.getUserById(userId);
-        //Убрал получение друга
-        user.removeFriend(friendId);
-        userStorage.updateUser(user);
+        userStorage.getUserById(userId);
+        userStorage.getUserById(friendId);
+        userStorage.deleteFriend(userId, friendId);
     }
 
-    public List<User> getUserFriends(int userId) throws UserNotFoundException {
+    public List<User> getFriends(int userId) throws UserNotFoundException {
         log.info("Getting friends for user with id: {}", userId);
         User user = userStorage.getUserById(userId);
         // Check if the user has any friends

@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exception.MpaNotFoundException;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 import ru.yandex.practicum.filmorate.service.MpaService;
 
@@ -12,17 +14,18 @@ public class MpaController {
 
     private final MpaService mpaService;
 
+    @Autowired
     public MpaController(MpaService mpaService) {
         this.mpaService = mpaService;
     }
 
-    @GetMapping("/{id}")
-    public MpaRating getMpaById(@PathVariable int id) {
-        return mpaService.getMpaRatingById(id);
+    @GetMapping
+    public List<MpaRating> getAllMpaRatings() {
+        return mpaService.getAllMpaRatings();
     }
 
-    @GetMapping
-    public List<MpaRating> getAllMpa() {
-        return mpaService.getAllMpaRatings();
+    @GetMapping("/{id}")
+    public MpaRating getMpaById(@PathVariable int id) throws MpaNotFoundException {
+        return mpaService.getMpaRatingById(id);
     }
 }

@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -17,7 +19,6 @@ import java.util.Set;
 @ToString
 @EqualsAndHashCode(of = "id")
 @Builder
-@AllArgsConstructor // Добавил для @Builder
 public class Film implements Comparable<Film> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,7 +45,7 @@ public class Film implements Comparable<Film> {
 
     @NotNull(message = "Рейтинг MPA не может быть null")
     @Enumerated(EnumType.STRING)
-    @Column(name = "rating_id")
+    @Column(name = "rating_id", nullable = false)
     private MpaRating mpaRating;
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -60,6 +61,25 @@ public class Film implements Comparable<Film> {
     @JsonIgnore
     @Builder.Default
     private Set<Integer> likes = new HashSet<>();
+
+    @JsonCreator
+    public Film(@JsonProperty("id") int id,
+                @JsonProperty("name") String name,
+                @JsonProperty("description") String description,
+                @JsonProperty("releaseDate") LocalDate releaseDate,
+                @JsonProperty("duration") int duration,
+                @JsonProperty("mpa") MpaRating mpaRating,
+                @JsonProperty("genres") Set<Genre> genres,
+                @JsonProperty("likes") Set<Integer> likes) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.releaseDate = releaseDate;
+        this.duration = duration;
+        this.mpaRating = mpaRating;
+        this.genres = (genres != null) ? genres : new HashSet<>();
+        this.likes = (likes != null) ? likes : new HashSet<>();
+    }
 
     public Film() {
         this.genres = new HashSet<>();

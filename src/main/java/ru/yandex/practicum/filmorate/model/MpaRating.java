@@ -2,11 +2,8 @@ package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Optional;
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 @Getter
@@ -28,22 +25,10 @@ public enum MpaRating {
     }
 
     @JsonCreator
-    public static MpaRating forValues(Map<String, Object> mpaRating) {
-        if (mpaRating == null) {
-            throw new IllegalArgumentException("Invalid input for MpaRating");
-        }
-        for (MpaRating rating : MpaRating.values()) {
-            if (rating.getId() == (Integer) mpaRating.get("id")) {
-                return rating;
-            }
-        }
-        return null;
-    }
-
-    public static MpaRating valueOfName(String name) {
-        for (MpaRating mpa : values()) {
-            if (mpa.name.equals(name)) {
-                return mpa;
+    public static MpaRating forValues(@JsonProperty("id") int id) {
+        for (MpaRating mpaRating : MpaRating.values()) {
+            if (mpaRating.id == id) {
+                return mpaRating;
             }
         }
         return null;
