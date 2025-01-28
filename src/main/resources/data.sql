@@ -1,22 +1,25 @@
--- data.sql
+-- Вставка данных в таблицу жанров (с проверкой на дубликаты)
+INSERT INTO genres (genre_id, genre_name)
+SELECT 1, 'Комедия' WHERE NOT EXISTS (SELECT 1 FROM genres WHERE genre_id = 1);
+INSERT INTO genres (genre_id, genre_name)
+SELECT 2, 'Драма' WHERE NOT EXISTS (SELECT 1 FROM genres WHERE genre_id = 2);
+INSERT INTO genres (genre_id, genre_name)
+SELECT 3, 'Мультфильм' WHERE NOT EXISTS (SELECT 1 FROM genres WHERE genre_id = 3);
+INSERT INTO genres (genre_id, genre_name)
+SELECT 4, 'Триллер' WHERE NOT EXISTS (SELECT 1 FROM genres WHERE genre_id = 4);
+INSERT INTO genres (genre_id, genre_name)
+SELECT 5, 'Документальный' WHERE NOT EXISTS (SELECT 1 FROM genres WHERE genre_id = 5);
+INSERT INTO genres (genre_id, genre_name)
+SELECT 6, 'Боевик' WHERE NOT EXISTS (SELECT 1 FROM genres WHERE genre_id = 6);
 
--- Вставка данных в таблицу рейтингов MPAA
-MERGE INTO mpa (rating_id, rating_name, description)
-    KEY (rating_id)
-    VALUES
-        (1, 'G', 'У фильма нет возрастных ограничений'),
-        (2, 'PG', 'Детям рекомендуется смотреть фильм с родителями'),
-        (3, 'PG-13', 'Детям до 13 лет просмотр не желателен'),
-        (4, 'R', 'Лицам до 17 лет просматривать фильм можно только в присутствии взрослого'),
-        (5, 'NC-17', 'Лицам до 18 лет просмотр запрещён');
-
--- Вставка данных в таблицу жанров
-MERGE INTO genres (genre_id, genre_name)
-    KEY (genre_id)
-    VALUES
-        (1, 'Комедия'),
-        (2, 'Драма'),
-        (3, 'Мультфильм'),
-        (4, 'Триллер'),
-        (5, 'Документальный'),
-        (6, 'Боевик');
+-- Вставка данных в таблицу рейтингов MPA (с проверкой на дубликаты)
+INSERT INTO mpa_rating (rating_id, name)
+SELECT 1, 'G' WHERE NOT EXISTS (SELECT 1 FROM mpa_rating WHERE rating_id = 1);
+INSERT INTO mpa_rating (rating_id, name)
+SELECT 2, 'PG' WHERE NOT EXISTS (SELECT 1 FROM mpa_rating WHERE rating_id = 2);
+INSERT INTO mpa_rating (rating_id, name)
+SELECT 3, 'PG13' WHERE NOT EXISTS (SELECT 1 FROM mpa_rating WHERE rating_id = 3);
+INSERT INTO mpa_rating (rating_id, name)
+SELECT 4, 'R' WHERE NOT EXISTS (SELECT 1 FROM mpa_rating WHERE rating_id = 4);
+INSERT INTO mpa_rating (rating_id, name)
+SELECT 5, 'NC17' WHERE NOT EXISTS (SELECT 1 FROM mpa_rating WHERE rating_id = 5);

@@ -1,10 +1,13 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.exception.GenreNotFoundException;
 import ru.yandex.practicum.filmorate.model.Genre;
+import lombok.extern.slf4j.Slf4j;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -13,6 +16,7 @@ import java.util.Optional;
 
 @Repository
 @Qualifier("genreDbStorage")
+@Slf4j
 public class GenreDbStorage implements GenreStorage {
     private final JdbcTemplate jdbcTemplate;
 
@@ -22,17 +26,22 @@ public class GenreDbStorage implements GenreStorage {
 
     @Override
     public Optional<Genre> getGenreById(int id) {
+        log.info("Retrieving genre with id: {}", id);
         String sql = "SELECT * FROM genres WHERE genre_id = ?";
-        List<Genre> genres = jdbcTemplate.query(sql, new GenreRowMapper(), id);
-        if (genres.isEmpty()) {
+        try {
+            Genre genre = jdbcTemplate.queryForObject(sql, new GenreRowMapper(), id);
+            assert genre != null;
+            return Optional.of(genre);
+        } catch (EmptyResultDataAccessException e) {
+            log.info("Genre with id {} not found", id);
             return Optional.empty();
         }
-        return Optional.of(genres.getFirst());
     }
 
     @Override
-    public List<Genre> getAllGenres() {
-        String sql = "SELECT * FROM genres";
+    public List<Genre> findAllGenres() {
+        log.info("Retrieving all genres");
+        String sql = "SELECT * FROM genres ORDER BY genre_id";
         return jdbcTemplate.query(sql, new GenreRowMapper());
     }
 

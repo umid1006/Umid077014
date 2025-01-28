@@ -109,54 +109,30 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public void addFriend(int userId, int friendId) {
-        String sqlQuery = "INSERT INTO friendships (user1_id, user2_id, status) VALUES (?, ?, 'CONFIRMED')";
+        String sqlQuery = "INSERT INTO users_friends (user_id, friend_id) VALUES (?, ?)";
         jdbcTemplate.update(sqlQuery, userId, friendId);
     }
 
     @Override
     public void deleteFriend(int userId, int friendId) {
-        String userExistsQuery = "SELECT COUNT(*) FROM users WHERE user_id IN (?, ?)";
-        int usersCount = jdbcTemplate.queryForObject(userExistsQuery, Integer.class, userId, friendId);
-        if (usersCount < 2) {
-            throw new UserNotFoundException("Один из пользователей с ID " + userId + " или " + friendId + " не найден");
-        }
-        String deleteFriendshipQuery = "DELETE FROM friendships WHERE user1_id = ? AND user2_id = ?";
-        int updatedRows = jdbcTemplate.update(deleteFriendshipQuery, userId, friendId);
-        if (updatedRows == 0) {
-            throw new RuntimeException("Не удалось удалить друга. Возможно, дружба не существует.");
-        }
+        String sqlQuery = "DELETE FROM users_friends WHERE user_id = ? AND friend_id = ?";
+        jdbcTemplate.update(sqlQuery, userId, friendId);
     }
 
     @Override
     public List<User> getUserFriends(int userId) {
-        if (userId == user1Id && user2Id != null) {
-            String sqlQuery = "SELECT u.* FROM users u WHERE u.user_id = ? " +
-                    "UNION ALL " +
-                    "SELECT u.* FROM users u INNER JOIN friendships f ON u.user_id = f.user2_id " +
-                    "WHERE f.user1_id = ? AND f.status = 'CONFIRMED' AND u.user_id <> ?";
-            List<User> friends = jdbcTemplate.query(sqlQuery, new UserRowMapper(), user2Id, userId, user2Id);
-            if (friends.isEmpty()) {
-                return new ArrayList<>(); // Return an empty list
-            }
-            return friends;
-        } else {
-            String sqlQuery = "SELECT u.* FROM users u " +
-                    "INNER JOIN friendships f ON u.user_id = f.user2_id " +
-                    "WHERE f.user1_id = ? AND f.status = 'CONFIRMED'";
-            List<User> friends = jdbcTemplate.query(sqlQuery, new UserRowMapper(), userId);
-            if (friends.isEmpty()) {
-                return new ArrayList<>(); // Return an empty list
-            }
-            return friends;
-        }
+        String sqlQuery = "SELECT u.* FROM users u " +
+                "JOIN users_friends f ON u.user_id = f.friend_id " +
+                "WHERE f.user_id = ?";
+        return jdbcTemplate.query(sqlQuery, new UserRowMapper(), userId);
     }
 
     @Override
     public List<User> getCommonFriends(int userId, int otherUserId) {
         String sqlQuery = "SELECT u.* FROM users u " +
-                "INNER JOIN friendships f1 ON u.user_id = f1.user2_id " +
-                "INNER JOIN friendships f2 ON u.user_id = f2.user2_id " +
-                "WHERE f1.user1_id = ? AND f2.user1_id = ?";
+                "JOIN users_friends uf1 ON u.user_id = uf1.friend_id " +
+                "JOIN users_friends uf2 ON u.user_id = uf2.friend_id " +
+                "WHERE uf1.user_id = ? AND uf2.user_id = ?";
         return jdbcTemplate.query(sqlQuery, new UserRowMapper(), userId, otherUserId);
     }
 

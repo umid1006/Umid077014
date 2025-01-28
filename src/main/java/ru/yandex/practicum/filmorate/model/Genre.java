@@ -22,7 +22,7 @@ public class Genre {
     @Column(name = "genre_id")
     private int id;
 
-    @Column(name = "genre_name")
+    @Column(name = "genre_name", nullable = false)
     private String name;
 
     @JsonCreator

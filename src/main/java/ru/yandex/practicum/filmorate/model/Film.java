@@ -1,8 +1,8 @@
 package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -19,6 +19,8 @@ import java.util.Set;
 @ToString
 @EqualsAndHashCode(of = "id")
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Film implements Comparable<Film> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,14 +41,16 @@ public class Film implements Comparable<Film> {
     @Column(name = "release_date", nullable = false)
     private LocalDate releaseDate;
 
+    @Positive
     @Min(value = 1, message = "Продолжительность фильма должна быть положительным числом")
     @Column(name = "duration", nullable = false)
     private int duration;
 
     @NotNull(message = "Рейтинг MPA не может быть null")
-    @Enumerated(EnumType.STRING)
-    @Column(name = "rating_id", nullable = false)
-    private MpaRating mpaRating;
+    @Enumerated(EnumType.ORDINAL)
+    @Column(name = "rating_id")
+    @JsonSerialize(using = MpaRatingSerializer.class)
+    private MpaRating mpa;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -58,9 +62,12 @@ public class Film implements Comparable<Film> {
     private Set<Genre> genres = new HashSet<>();
 
     @Transient
-    @JsonIgnore
     @Builder.Default
     private Set<Integer> likes = new HashSet<>();
+
+    public static class MpaIdDto {
+        public int id;
+    }
 
     @JsonCreator
     public Film(@JsonProperty("id") int id,
@@ -68,7 +75,7 @@ public class Film implements Comparable<Film> {
                 @JsonProperty("description") String description,
                 @JsonProperty("releaseDate") LocalDate releaseDate,
                 @JsonProperty("duration") int duration,
-                @JsonProperty("mpa") MpaRating mpaRating,
+                @JsonProperty("mpa") MpaIdDto mpaIdDto, // Deserialize into DTO
                 @JsonProperty("genres") Set<Genre> genres,
                 @JsonProperty("likes") Set<Integer> likes) {
         this.id = id;
@@ -76,14 +83,13 @@ public class Film implements Comparable<Film> {
         this.description = description;
         this.releaseDate = releaseDate;
         this.duration = duration;
-        this.mpaRating = mpaRating;
+        this.mpa = MpaRating.forValues(mpaIdDto.id);
         this.genres = (genres != null) ? genres : new HashSet<>();
         this.likes = (likes != null) ? likes : new HashSet<>();
     }
 
-    public Film() {
-        this.genres = new HashSet<>();
-        this.likes = new HashSet<>();
+    public Integer getMpaId() {
+        return mpa != null ? mpa.ordinal() + 1: null;
     }
 
     public void addGenre(Genre genre) {

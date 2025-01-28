@@ -22,7 +22,7 @@ public class GenreService {
         return genreStorage.getGenreById(id).orElseThrow(() -> new GenreNotFoundException("Genre with id " + id + " not found"));
     }
 
-    public List<Genre> getAllGenres() {
-        return genreStorage.getAllGenres();
+    public List<Genre> findAllGenres() {
+        return genreStorage.findAllGenres();
     }
 }

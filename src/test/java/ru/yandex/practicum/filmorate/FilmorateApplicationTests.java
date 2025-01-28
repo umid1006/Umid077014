@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @JdbcTest
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-@Import({UserDbStorage.class, FilmDbStorage.class, MpaDbStorage.class, GenreDbStorage.class}) // Добавьте все DbStorage классы
+@Import({UserDbStorage.class, FilmDbStorage.class, GenreDbStorage.class}) // Добавьте все DbStorage классы
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @Transactional // Добавьте эту аннотацию
 class FilmorateApplicationTests {
