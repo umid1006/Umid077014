@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class ErrorHandler {
 
-    private static final Logger log = LoggerFactory.getLogger(ErrorHandler.class);
+    public static final Logger log = LoggerFactory.getLogger(ErrorHandler.class);
 
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<Map<String, String>> handleValidationException(ValidationException e) {

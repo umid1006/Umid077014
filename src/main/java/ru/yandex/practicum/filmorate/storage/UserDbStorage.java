@@ -14,6 +14,8 @@ import java.sql.*;
 import java.sql.Date;
 import java.util.*;
 
+import static ru.yandex.practicum.filmorate.exception.ErrorHandler.log;
+
 @Repository
 @Qualifier("userDbStorage")
 public class UserDbStorage implements UserStorage {
@@ -81,8 +83,10 @@ public class UserDbStorage implements UserStorage {
     }
 
     private Set<Integer> loadFriendsForUser(int userId) {
-        String sqlQuery = "SELECT user2_id FROM friendships WHERE user1_id = ? AND status = 'CONFIRMED'";
-        return new HashSet<>(jdbcTemplate.queryForList(sqlQuery, Integer.class, userId));
+        String sqlQuery = "SELECT friend_id FROM users_friends WHERE user_id = ?";
+        log.debug("Executing SQL query: {} with userId: {}", sqlQuery, userId);
+        List<Integer> friendIds = jdbcTemplate.queryForList(sqlQuery, Integer.class, userId);
+        return new HashSet<>(friendIds);
     }
 
     @Override
